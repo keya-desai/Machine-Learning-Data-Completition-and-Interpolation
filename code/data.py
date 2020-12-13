@@ -8,83 +8,77 @@ class Data:
 
 	def __init__(self, dataPath):
 		self.path = dataPath
-		self.data = None
-		# self.testData = None
+		self.trainData = None
+		self.testData = None
 		self.dataWithNan = None
 		self.columnList = ['age', 'workclass', 'fnlwgt', 'education', 'educationNum', 'maritalStatus', 'occupation', 'relationship', 'race', 'sex', 'capitalGain', 'capitalLoss', 'hoursPerWeek', 'nativeCountry', 'income']
 		self.categoricalColumnList = ['workclass', 'education', 'maritalStatus', 'occupation', 'relationship', 'race', 'sex', 'nativeCountry', 'income']
-
+		self.continuousColumnList = [x for x in self.columnList if x not in self.categoricalColumnList]
 
 	def getData(self, newData = False):
 
 		if newData:
 
-			self.data = pd.read_csv(self.path + 'adult.data', header = None)
-			self.data.columns = self.columnList
+			print("Reading data")
+			self.trainData = pd.read_csv(self.path + 'adult.data', header = None)
+			self.trainData.columns = self.columnList
 
-			# self.testData = pd.read_csv(self.path + 'adult.test', skiprows = 1, header = None)
-			# self.testData.columns = self.columnList
+			self.testData = pd.read_csv(self.path + 'adult.test', skiprows = 1, header = None)
+			self.testData.columns = self.columnList
 
-			# Preprocessing Data
+			# Preprocessing trainData
+			print("Preprocessing data")
 			# Removing NaN values 
-			self.removeNan(self.data)
-			# self.removeNan(self.testData)
+			self.removeNan(self.trainData)
+			self.removeNan(self.testData)
+
+			# normalize continuous features
+			self.normalizeFeatures(self.trainData)
+			self.normalizeFeatures(self.testData)
 
 			# One hot encoding
-			self.data = self.oneHotEncoding(self.data)
+			self.trainData = self.oneHotEncoding(self.trainData)
+			self.testData = self.oneHotEncoding(self.testData)
 
-			print("Data shape = ", self.data.shape)
-			# print("Test Data shape = ", self.testData.shape)
-			print("Data with Nan shape = ", self.dataWithNan.shape)
+			# print("trainData shape = ", self.trainData.shape)
+			# print("Test trainData shape = ", self.testData.shape)
+			# print("trainData with Nan shape = ", self.dataWithNan.shape)
 
-			
-			# print(self.data.head())
-			# (30162, 105)
-			# self.data = self.data.head(1000)
-			print(self.data.shape)
-
-			# self.testData = self.oneHotEncoding(self.testData)
-			# print(self.testData.head())
-			# (15060, 104)
+			# self.trainData = self.trainData.head(1000)
+			# self.testData = self.testData.head(1000)
+			# print(self.trainData.shape)
 			# print(self.testData.shape)
 
-			# 1 column in missing in test data - add feature manually
-			# for column in self.data.columns:
-				# if column not in self.testData.columns:
-					# print("Adding dummy column {} in Test data".format(column))
-					# self.testData[column] = 0
-			# print(self.testData.shape)
+			# 1 column in missing in test trainData - add feature manually
+			for column in self.trainData.columns:
+				if column not in self.testData.columns:
+					print("Adding dummy column {} in Test Data".format(column))
+					self.testData[column] = 0
 
-
-			X_train, X_test = train_test_split(self.data, test_size = 0.20, random_state = 42)
-			print(X_train.shape, X_test.shape)
-			# exit()
-			X_prime_train, isFeatureReal_train = self.prepareMissingData(X_train)
-			X_prime_test, isFeatureReal_test = self.prepareMissingData(X_test)
+			print("Randomly removing features from training data")
+			X_prime_train, isFeatureReal_train = self.prepareMissingData(self.trainData)
+			print("Randomly removing features from testing data")
+			X_prime_test, isFeatureReal_test = self.prepareMissingData(self.testData)
 
 			# Conver X_train and X_test to numpy
-			X_train = X_train.to_numpy()
-			X_test = X_test.to_numpy()
+			X_train = self.trainData.to_numpy()
+			X_test = self.testData.to_numpy()
 
-			# X_prime, isFeatureReal = self.prepareMissingData(self.data)
-			# X_train, X_test, X_missing_train, X_missing_test = train_test_split(X, X_prime, test_size=0.20, random_state=42)
-
-
-
-			# with open(self.path + 'x.npy', 'wb') as f:
+			print("Writing training data in the folder {}".format(self.path + 'Train/'))
+			print("Writing testing data in the folder {}".format(self.path + 'Test/'))
 			np.save(self.path + 'Train/X.npy', X_train)
 			np.save(self.path + 'Test/X.npy', X_test)
-			# with open(self.path + 'x_prime.npy', 'wb') as f:
+
 			np.save(self.path + 'Train/X_prime.npy', X_prime_train)
 			np.save(self.path + 'Test/X_prime.npy', X_prime_test)
-			# with open(self.path + 'feature_information.npy', 'wb') as f:
+
 			np.save(self.path + 'Train/feature_information.npy', isFeatureReal_train)
 			np.save(self.path + 'Test/feature_information.npy', isFeatureReal_test)
 
 		else:
-			# X = np.load(self.path + 'x_prime.npy', allow_pickle = True)	
-			# X_prime = np.load(self.path + 'x_prime.npy', allow_pickle = True)
-			# isFeatureReal = np.load(self.path + 'feature_information.npy', allow_pickle = True)
+
+			print("Reading training data from the folder {}".format(self.path + 'Train/'))
+			print("Reading testing data from the folder {}".format(self.path + 'Test/'))
 
 			X_train = np.load(self.path + 'Train/X.npy', allow_pickle = True)
 			X_test = np.load(self.path + 'Test/X.npy', allow_pickle = True)
@@ -95,24 +89,16 @@ class Data:
 			isFeatureReal_train = np.load(self.path + 'Train/feature_information.npy', allow_pickle = True)
 			isFeatureReal_test = np.load(self.path + 'Test/feature_information.npy', allow_pickle = True)
 
-
-			# print(isFeatureReal)
-			# print(isFeatureReal.shape)
-			# print("Total missing = ", np.sum(isFeatureReal==0))
-
-			# print(X_prime)
-			# print(X_prime.shape)
-
 		return X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test
 
 
 	def prepareMissingData(self, df, nMissingMax = 3):
+		
+		# Supress the warning
 		pd.options.mode.chained_assignment = None
-
 		m, k = df.shape
 		isFeatureReal = pd.DataFrame(1, columns = df.columns, index = df.index)
-
-		continuousColList = [x for x in self.columnList if x not in self.categoricalColumnList]
+		
 
 		# Iterating each row
 		for idx in tqdm(range(m)):
@@ -122,7 +108,7 @@ class Data:
 			# Filtering out the categorical columns which are zero
 			features = row[row!=0]
 			# Adding back the continuous columns whose value = 0
-			for column in continuousColList:
+			for column in self.continuousColumnList:
 			    if column not in features.keys():
 			        features[column] = row[column]
 
@@ -134,7 +120,7 @@ class Data:
 
 			for col in x:
 				# If column is continuous then can directly set it to 0. 
-				if col in continuousColList:
+				if col in self.continuousColumnList:
 				    isFeatureReal[col].iloc[idx] = 0
 				    row[col] = 0
 				# For categorical column, need to set 0 in isFeatureReal in all columns 
@@ -158,13 +144,6 @@ class Data:
 		return df, isFeatureReal
 
 
-	def oneHotEncoding(self, df):
-
-		for column in self.categoricalColumnList:
-			y = pd.get_dummies(df[column], prefix='Is_' + column)
-			df = pd.concat([df, y], axis = 1)
-			df.drop(column, axis = 1, inplace = True)
-		return df
 
 	def removeNan(self, df):
 
@@ -176,11 +155,33 @@ class Data:
 		    df.drop(subset.index, inplace = True)
 
 
+	def oneHotEncoding(self, df):
+
+		for column in self.categoricalColumnList:
+			y = pd.get_dummies(df[column], prefix='Is_' + column)
+			df = pd.concat([df, y], axis = 1)
+			df.drop(column, axis = 1, inplace = True)
+		return df
+
+	def normalizeFeatures(self, df):
+
+		for col in self.continuousColumnList:
+			maxValue = max(df[col])
+			minValue = min(df[col])
+			df[col] = (df[col] - minValue)/(maxValue - minValue)
+
+		return df
+
+
 data = Data('../Data/')
 X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test = data.getData(newData = False)
-print("X train shape = ", X_train.shape)
-print("X test shape = ", X_test.shape)
-print("X prime train shape = ", X_prime_train.shape)
-print("X prime test shape = ", X_prime_test.shape)
-print("feature information train shape = ", isFeatureReal_train.shape)
-print("feature information test shape = ", isFeatureReal_test.shape)
+
+print("\n***** Training data ***** ")
+print("X shape = ", X_train.shape)
+print("X prime shape = ", X_prime_train.shape)
+print("feature information shape = ", isFeatureReal_train.shape)
+
+print("\n***** Testing data ***** ")
+print("X shape = ", X_test.shape)
+print("X prime shape = ", X_prime_test.shape)
+print("Feature information shape = ", isFeatureReal_test.shape)
