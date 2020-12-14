@@ -55,17 +55,17 @@ class Data:
 					print("Adding dummy column {} in Test Data".format(column))
 					self.testData[column] = 0
 
-			print("Randomly removing features from training data")
+			print("\nRandomly removing features from training data")
 			X_prime_train, isFeatureReal_train = self.prepareMissingData(self.trainData)
-			print("Randomly removing features from testing data")
+			print("\nRandomly removing features from testing data")
 			X_prime_test, isFeatureReal_test = self.prepareMissingData(self.testData)
 
 			# Conver X_train and X_test to numpy
 			X_train = self.trainData.to_numpy()
 			X_test = self.testData.to_numpy()
 
-			print("Writing training data in the folder {}".format(self.path + 'Train/'))
-			print("Writing testing data in the folder {}".format(self.path + 'Test/'))
+			print("\nWriting training data in the folder {}".format(self.path + 'Train/'))
+			print("\nWriting testing data in the folder {}".format(self.path + 'Test/'))
 			np.save(self.path + 'Train/X.npy', X_train)
 			np.save(self.path + 'Test/X.npy', X_test)
 
@@ -173,15 +173,4 @@ class Data:
 		return df
 
 
-data = Data('../Data/')
-X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test = data.getData(newData = False)
 
-print("\n***** Training data ***** ")
-print("X shape = ", X_train.shape)
-print("X prime shape = ", X_prime_train.shape)
-print("feature information shape = ", isFeatureReal_train.shape)
-
-print("\n***** Testing data ***** ")
-print("X shape = ", X_test.shape)
-print("X prime shape = ", X_prime_test.shape)
-print("Feature information shape = ", isFeatureReal_test.shape)
