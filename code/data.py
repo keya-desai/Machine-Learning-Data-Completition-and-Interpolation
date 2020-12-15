@@ -40,8 +40,7 @@ class Data:
 			self.trainData = self.oneHotEncoding(self.trainData)
 			self.testData = self.oneHotEncoding(self.testData)
 
-			# Reordering columns of testdata to match traindata
-			self.testData.reindex(columns = self.trainData.columns)
+			
 
 			# print("trainData shape = ", self.trainData.shape)
 			# print("Test trainData shape = ", self.testData.shape)
@@ -58,12 +57,18 @@ class Data:
 					print("Adding dummy column {} in Test Data".format(column))
 					self.testData[column] = 0
 
+			# Reordering columns of testdata to match traindata
+			self.testData = self.testData.reindex(columns = self.trainData.columns)
+
+			# print("Train data = ", self.trainData.head())
+			# print("Test data = ", self.testData.head())
+
 			print("\nRandomly removing features from training data")
 			X_prime_train, isFeatureReal_train = self.prepareMissingData(self.trainData)
 			print("\nRandomly removing features from testing data")
 			X_prime_test, isFeatureReal_test = self.prepareMissingData(self.testData)
 
-			# Conver X_train and X_test to numpy
+			# Convetr X_train and X_test to numpy
 			X_train = self.trainData.to_numpy()
 			X_test = self.testData.to_numpy()
 
@@ -141,6 +146,9 @@ class Data:
 	                
 			df.iloc[idx] = row
 
+		# print(df.loc[df["age"] == 0])
+		# print(isFeatureReal.loc[isFeatureReal["age"] == 0])
+		# exit()
 		df = df.to_numpy()
 		isFeatureReal = isFeatureReal.to_numpy()
 

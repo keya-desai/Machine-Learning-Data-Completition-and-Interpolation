@@ -62,31 +62,17 @@ class BaselineModel:
         # print(self.colToMeanMode)
     
     def fillMissingValues(self, colIdxList = None):
+        train_pred = self.X_prime_train
+        test_pred = self.X_prime_test
+
+        print(train_pred.loc[train_pred[0] == 0])
+        
         if colIdxList:
             for col in colIdxList:
-                self.X_prime_train.fillna(value = self.colToMeanMode[col], inplace = True)
-                self.X_prime_test.fillna(value = self.colToMeanMode, inplace= True)
+                train_pred.fillna(value = self.colToMeanMode[col], inplace = True)
+                test_pred.fillna(value = self.colToMeanMode, inplace= True)
         else:
-            self.X_prime_train.fillna(value = self.colToMeanMode, inplace = True)
-            self.X_prime_test.fillna(value = self.colToMeanMode, inplace= True)
-        return self.X_prime_train, self.X_prime_test
+            train_pred.fillna(value = self.colToMeanMode, inplace = True)
+            test_pred.fillna(value = self.colToMeanMode, inplace= True)
+        return train_pred, test_pred
         
-    # Root Mean square Error 
-    def calculateError(self, trainTrueData, testTrueData):
-
-        trainPredicted = self.X_prime_train.to_numpy()
-        testPredicted = self.X_prime_test.to_numpy()
-        
-        m, k = trainPredicted.shape
-        m_test, k_test = testPredicted.shape
-        
-        diffTrain = (trainTrueData - trainPredicted)**2
-        diffTest = (testTrueData - testPredicted)**2
-        
-        sumTrain = np.sum(diffTrain, axis = 1)
-        sumTest = np.sum(diffTest, axis = 1)
-        
-        errTrain = np.mean(np.sqrt(sumTrain))
-        errTest = np.mean(np.sqrt(sumTest))
-        
-        return errTrain, errTest
