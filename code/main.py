@@ -53,7 +53,7 @@ def main():
 	train_pred, test_pred = dev_model(X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test, baseline_model_obj)
 	trainError, testError = calculateError(X_train, train_pred, X_test, test_pred)
 	print("\nTraining Error = ", trainError)
-	print("\nTesting Error = ", testError)
+	print("Testing Error = ", testError)
 
 
 if __name__ == "__main__":

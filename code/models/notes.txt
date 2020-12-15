@@ -1,0 +1,8 @@
+Development model to do 
+* identify rows with missing data using isFeature Missing for both train and test - done
+* send only real data rows in training? 
+* extend to any continuous column
+* extend to categorical features
+* convergence 
+* tune learning rate
+*** Merging all models

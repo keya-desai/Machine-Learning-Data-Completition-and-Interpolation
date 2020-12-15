@@ -74,6 +74,7 @@ class Data:
 
 			print("\nWriting training data in the folder {}".format(self.path + 'Train/'))
 			print("\nWriting testing data in the folder {}".format(self.path + 'Test/'))
+
 			np.save(self.path + 'Train/X.npy', X_train)
 			np.save(self.path + 'Test/X.npy', X_test)
 
@@ -84,6 +85,14 @@ class Data:
 			np.save(self.path + 'Test/feature_information.npy', isFeatureReal_test)
 
 		else:
+			# # DEBUG
+			# print("Reading data")
+			# self.trainData = pd.read_csv(self.path + 'adult.data', header = None)
+			# self.trainData.columns = self.columnList
+			# # print(self.trainData.loc[self.trainData["age"] == 0])
+			# print(self.trainData.iloc[194])
+			# exit()
+
 
 			print("Reading training data from the folder {}".format(self.path + 'Train/'))
 			print("Reading testing data from the folder {}".format(self.path + 'Test/'))
@@ -146,9 +155,6 @@ class Data:
 	                
 			df.iloc[idx] = row
 
-		# print(df.loc[df["age"] == 0])
-		# print(isFeatureReal.loc[isFeatureReal["age"] == 0])
-		# exit()
 		df = df.to_numpy()
 		isFeatureReal = isFeatureReal.to_numpy()
 
