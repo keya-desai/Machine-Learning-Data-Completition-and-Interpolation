@@ -61,13 +61,19 @@ class BaselineModel:
                 continue
         # print(self.colToMeanMode)
     
-    def fillMissingValues(self):
-        self.X_prime_train.fillna(value = self.colToMeanMode, inplace = True)
-        self.X_prime_test.fillna(value = self.colToMeanMode, inplace= True)
+    def fillMissingValues(self, colIdxList = None):
+        if colIdxList:
+            for col in colIdxList:
+                self.X_prime_train.fillna(value = self.colToMeanMode[col], inplace = True)
+                self.X_prime_test.fillna(value = self.colToMeanMode, inplace= True)
+        else:
+            self.X_prime_train.fillna(value = self.colToMeanMode, inplace = True)
+            self.X_prime_test.fillna(value = self.colToMeanMode, inplace= True)
+        return self.X_prime_train, self.X_prime_test
         
     # Root Mean square Error 
     def calculateError(self, trainTrueData, testTrueData):
-        
+
         trainPredicted = self.X_prime_train.to_numpy()
         testPredicted = self.X_prime_test.to_numpy()
         

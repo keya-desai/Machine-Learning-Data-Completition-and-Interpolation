@@ -5,7 +5,7 @@ from models.baseline import BaselineModel
 
 def main():
 	data = Data('../Data/')
-	X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test = data.getData(newData = False)
+	X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test = data.getData(newData = True)
 
 	print("\n***** Training data ***** ")
 	print("X shape = ", X_train.shape)

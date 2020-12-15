@@ -40,6 +40,9 @@ class Data:
 			self.trainData = self.oneHotEncoding(self.trainData)
 			self.testData = self.oneHotEncoding(self.testData)
 
+			# Reordering columns of testdata to match traindata
+			self.testData.reindex(columns = self.trainData.columns)
+
 			# print("trainData shape = ", self.trainData.shape)
 			# print("Test trainData shape = ", self.testData.shape)
 			# print("trainData with Nan shape = ", self.dataWithNan.shape)
@@ -142,8 +145,6 @@ class Data:
 		isFeatureReal = isFeatureReal.to_numpy()
 
 		return df, isFeatureReal
-
-
 
 	def removeNan(self, df):
 
