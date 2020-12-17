@@ -115,7 +115,6 @@ class Data:
 		pd.options.mode.chained_assignment = None
 		m, k = df.shape
 		isFeatureReal = pd.DataFrame(1, columns = df.columns, index = df.index)
-		
 
 		# Iterating each row
 		for idx in tqdm(range(m)):

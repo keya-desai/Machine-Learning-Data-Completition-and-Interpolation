@@ -4,13 +4,15 @@ import numpy as np
 
 class BaselineModel:
     
-    def __init__(self, X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test):
+    def __init__(self, X_train, X_test, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test, categoricalFeatures):
 
         self.X_prime_train = pd.DataFrame(X_prime_train)
         self.X_prime_test = pd.DataFrame(X_prime_test)
 
         self.isFeatureReal_train = pd.DataFrame(data = isFeatureReal_train)
         self.isFeatureReal_test = pd.DataFrame(data = isFeatureReal_test)
+
+        self.categoricalFeatures = categoricalFeatures
 
         # temp = pd.DataFrame(self.X_prime_train)
         # print("In baseline before filtering")         
@@ -31,15 +33,7 @@ class BaselineModel:
 
 
         self.numFeatures = len(self.isFeatureReal_train.columns)
-        self.categoricalFeatures = [[i for i in range(6,13)],
-                         [i for i in range(13,29)],
-                         [i for i in range(29,36)],
-                         [i for i in range(36,50)],
-                         [i for i in range(50,56)],
-                         [i for i in range(56,61)],
-                         [i for i in range(60,63)],
-                         [i for i in range(63,104)],
-                         [i for i in range(104,106)]]
+
 
         self.isCategorical = [i for _l in self.categoricalFeatures for i in _l]
         self.startIndex = [l[0] for l in self.categoricalFeatures]
