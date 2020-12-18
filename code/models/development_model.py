@@ -2,12 +2,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from tqdm import tqdm
 
 
 def linear_regression_model(X, y, learning_rate, epochs):
     # weight initialization
     m, k = X.shape
-    w = np.random.randn(k)
+    w = np.random.rand(k) * np.sqrt(1/m)
     b = 1
     loss = []
     l_prev = 0
@@ -44,7 +45,7 @@ def logistic_regression_model(X, Y, learning_rate, epochs):
     m, k = X.shape
     _, c = Y.shape
     bias = np.array([1] * c).reshape(1, c)
-    W = np.random.normal(0, 0.01, (k, c))
+    W = np.random.normal(0, 1, (k, c)) * np.sqrt(1/m)
     W = np.append(bias, W, axis = 0)
     # print("Weight matrix : ", W.shape)
     # b = 1
@@ -70,6 +71,7 @@ def logistic_regression_model(X, Y, learning_rate, epochs):
         W -= learning_rate * dW
 
         l = - np.sum(np.multiply(Y, np.log(Z_softmax)))/m
+        # print(l)
 
     # print("Final loss = ", l)
     return W
@@ -97,182 +99,105 @@ def percent_data_missing(df):
     return sorted_index_list
 
 
-def ensemble_model_trial(X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test, baseline_model_obj, categoricalFeatures):
+def model(X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test, categoricalFeatures):
 
-    sorted_index_list =  percent_data_missing(isFeatureReal_train)
-    _, k = X_prime_train.shape
+    # identify col with least percent of missing data.
+    sorted_index_list = percent_data_missing(X_prime_train)
+    first_col = sorted_index_list[0]
 
-    # Fill with baseline values
-    baseline_model_obj.calculateSampleAverage()
-    train_baseline, test_baseline = baseline_model_obj.fillMissingValues()
+    # remove rows with first_col missing
+    m, k = X_prime_train.shape
+    isFeatureReal_train_temp = np.ones((m, k))
+    isFeatureReal_train_temp[:, first_col] = isFeatureReal_train[:, first_col]
+    x_training = pd.DataFrame(X_prime_train).where(isFeatureReal_train_temp > 0)
+    x_training.dropna(inplace = True)
 
-
+    predicted_indexes = [first_col]
     categoricalFeaturesFlatten = [ele for sublist in categoricalFeatures for ele in sublist]
-    # print(categoricalFeaturesFlatten)
 
-    index_column_to_predict = 0
-    predicted_indexes = []
-
-    for index_column_to_predict in sorted_index_list:
-        if index_column_to_predict not in categoricalFeaturesFlatten:
-            X_prime_train[:, index_column_to_predict], X_prime_test[:, index_column_to_predict] = predictContinuousFeature(pd.DataFrame(X_prime_train), pd.DataFrame(X_prime_test), isFeatureReal_train, isFeatureReal_test, index_column_to_predict)    
+    for col_to_predict in sorted_index_list[1:]:
+        if col_to_predict in predicted_indexes:
+            continue
+        if col_to_predict not in categoricalFeaturesFlatten:
+            X_prime_train[:, col_to_predict], X_prime_test[:, col_to_predict] = predictContinuousFeature(pd.DataFrame(X_prime_train), pd.DataFrame(X_prime_test), isFeatureReal_train, isFeatureReal_test, col_to_predict, predicted_indexes)    
+            predicted_indexes.append(col_to_predict)
         else:
-            if index_column_to_predict in predicted_indexes:
-                continue
-
             for i, subList in enumerate(categoricalFeatures):
-                if index_column_to_predict in subList:
+                if col_to_predict in subList:
                     start = subList[0]
                     end = subList[-1]
                     indexInCategoricalList = i
                     break
-
-            X_prime_train[:, start : end + 1], X_prime_test[:, start : end + 1] = predictCategoricalFeature(pd.DataFrame(X_prime_train), pd.DataFrame(X_prime_test), isFeatureReal_train, isFeatureReal_test, categoricalFeatures, index_column_to_predict, start, end, indexInCategoricalList)
-
+            X_prime_train[:, start : end + 1], X_prime_test[:, start : end + 1] = predictCategoricalFeature(pd.DataFrame(X_prime_train), pd.DataFrame(X_prime_test), isFeatureReal_train, isFeatureReal_test, categoricalFeatures, col_to_predict, start, end, predicted_indexes)
             for _ in range(start, end + 1):
                 predicted_indexes.append(_)
-
-        print(index_column_to_predict)
-
-
-    return X_prime_train, X_prime_test
-
-def ensemble_model(X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test, baseline_model_obj, categoricalFeatures):
-
-    _, k = X_prime_train.shape
-
-    # Fill with baseline values
-    baseline_model_obj.calculateSampleAverage()
-    train_baseline, test_baseline = baseline_model_obj.fillMissingValues()
-
-
-    categoricalFeaturesFlatten = [ele for sublist in categoricalFeatures for ele in sublist]
-    # print(categoricalFeaturesFlatten)
-
-    index_column_to_predict = 0
-    while index_column_to_predict < k:
-        if index_column_to_predict not in categoricalFeaturesFlatten:
-            X_prime_train[:, index_column_to_predict], X_prime_test[:, index_column_to_predict] = predictContinuousFeature(train_data, test_data, isFeatureReal_train, isFeatureReal_test, index_column_to_predict)    
-            index_column_to_predict += 1
-            # pass
-
-        else:
             # break
-            for i, subList in enumerate(categoricalFeatures):
-                if index_column_to_predict in subList:
-                    start = subList[0]
-                    end = subList[-1]
-                    indexInCategoricalList = i
-                    break
-
-            X_prime_train[:, start : end + 1], X_prime_test[:, start : end + 1] = predictCategoricalFeature(train_data, test_data, isFeatureReal_train, isFeatureReal_test, categoricalFeatures, index_column_to_predict, start, end, indexInCategoricalList)
-            index_column_to_predict += end - start + 1
-
-        print(index_column_to_predict)
-
+        print(col_to_predict)
 
     return X_prime_train, X_prime_test
 
 
 
-def predictContinuousFeature(train_data, test_data, isFeatureReal_train, isFeatureReal_test, col_to_predict):
+def predictContinuousFeature(train_data, test_data, isFeatureReal_train, isFeatureReal_test, col_to_predict, predicted_indexes):
 
-    # Trying out with missing age column 
-    # col_to_predict = 100
-    nFeatures = len(train_data[0])
-    # # List of columns index to fill using baesline methods
-    # col_idx_list = [i for i in range(nFeatures) if i != col_to_predict]
-
-    # baseline_model_obj.calculateSampleAverage()
-    # train_data, test_data = baseline_model_obj.fillMissingValues(col_idx_list)
-
-    # Filtering rows where col_to_predict is missing
     m, k = train_data.shape
+    
     isFeatureReal_train_temp = np.ones((m, k))
     isFeatureReal_train_temp[:, col_to_predict] = isFeatureReal_train[:, col_to_predict]
-    x_training = train_data.where(isFeatureReal_train_temp > 0)
+    x_training = pd.DataFrame(train_data).where(isFeatureReal_train_temp > 0)
     x_training.dropna(inplace = True)
-    # Sanity check
-    # print(len(isFeatureReal_train_temp[isFeatureReal_train_temp[:, col_to_predict] == 1]))
-    # print(x_training.shape)
 
-    m_training, k_training = x_training.shape
+    x_training = train_data.iloc[:, predicted_indexes]
+    y = train_data.iloc[:, col_to_predict]
+
+    w, b = linear_regression_model(np.array(x_training), y, learning_rate = 0.00001, epochs = 100)
+
     isFeatureReal_train = pd.DataFrame(isFeatureReal_train)
     isFeatureReal_test = pd.DataFrame(isFeatureReal_test)
 
-    dummy_y = np.array([0] * m_training)
-    w, b = linear_regression_model(np.array(x_training), dummy_y, learning_rate = 0.00001, epochs = 100)
-
-    new_w = np.delete(w, col_to_predict)
-    cnt = 0
-
     for idx, _ in isFeatureReal_train.loc[isFeatureReal_train[col_to_predict] == 0].iterrows(): 
-        row = train_data.iloc[idx]
-        new_row = row.drop(col_to_predict)
-        pred = - (np.dot(new_w, new_row) + b )/w[col_to_predict]
-        # print(idx, pred)
+        row = train_data.iloc[idx, predicted_indexes]
+        pred = np.matmul(w, row) + b 
         train_data[col_to_predict].iloc[idx] = pred
-        cnt += 1
-        # if cnt > 5 : break
 
     for idx, _ in isFeatureReal_test.loc[isFeatureReal_test[col_to_predict] == 0].iterrows():
-        row = test_data.iloc[idx]
-        new_row = row.drop(col_to_predict)
-        pred = -(np.dot(new_w, new_row) + b )/w[col_to_predict]
+        row = train_data.iloc[idx, predicted_indexes]
+        pred = np.dot(w, row) + b 
         test_data[col_to_predict].iloc[idx] = pred    
 
     return train_data[col_to_predict], test_data[col_to_predict]
 
 
-def predictCategoricalFeature(train_data, test_data, isFeatureReal_train, isFeatureReal_test, categoricalFeatures, col_to_predict, start, end, indexInCategoricalList):
+def predictCategoricalFeature(train_data, test_data, isFeatureReal_train, isFeatureReal_test, categoricalFeatures, col_to_predict, start, end, predicted_indexes):
 
-    # Filtering rows where col_to_predict is missing
-    m, k = train_data.shape
+    m, k = isFeatureReal_train.shape
     isFeatureReal_train_temp = np.ones((m, k))
     isFeatureReal_train_temp[:, col_to_predict] = isFeatureReal_train[:, col_to_predict]
-    x_training = train_data.where(isFeatureReal_train_temp > 0)
+    x_training = pd.DataFrame(train_data).where(isFeatureReal_train_temp > 0)
     x_training.dropna(inplace = True)
 
-    # Sanity check
-    # print(len(isFeatureReal_train_temp[isFeatureReal_train_temp[:, col_to_predict] == 1]))
-    # print(x_training.shape)
+    y = x_training.iloc[:, start:end+1]
+    X = x_training.iloc[:, predicted_indexes]
+    W = logistic_regression_model(np.array(X), np.array(y), learning_rate = 0.0001, epochs = 100)
 
     isFeatureReal_train = pd.DataFrame(isFeatureReal_train)
     isFeatureReal_test = pd.DataFrame(isFeatureReal_test)
+    
+    for idx, _ in isFeatureReal_train.loc[isFeatureReal_train[col_to_predict] == 0].iterrows(): 
+        row = train_data.iloc[idx]
+        x = train_data.iloc[idx, predicted_indexes]
+        pred = predict(x, W)
+        train_data.iloc[idx, start : end + 1] = pred
 
-    categoricalFeaturesFlatten = [ele for sublist in categoricalFeatures for ele in sublist]
-
-    if col_to_predict in categoricalFeaturesFlatten:
-        for i, subList in enumerate(categoricalFeatures):
-            if col_to_predict in subList:
-                start = subList[0]
-                end = subList[-1]
-                indexInCategoricalList = i
-                break
-
-        y = x_training.iloc[:, start:end+1]
-        X = x_training.drop(categoricalFeatures[indexInCategoricalList], axis = 1)
-        W = logistic_regression_model(np.array(X), np.array(y), learning_rate = 0.0001, epochs = 100)
-        
-        # pred = predict(X[0], W)
-        # print(pred)
-        # print(y[0])
-
-        for idx, _ in isFeatureReal_train.loc[isFeatureReal_train[col_to_predict] == 0].iterrows(): 
-            row = train_data.iloc[idx]
-            x = row.drop(categoricalFeatures[indexInCategoricalList])
-            pred = predict(x, W)
-            train_data.iloc[idx, start : end + 1] = pred
-
-        for idx, _ in isFeatureReal_test.loc[isFeatureReal_test[col_to_predict] == 0].iterrows():
-            row = test_data.iloc[idx]
-            x = row.drop(categoricalFeatures[indexInCategoricalList])
-            pred = predict(x, W)
-            test_data.iloc[idx, start : end + 1] = pred
+    for idx, _ in isFeatureReal_test.loc[isFeatureReal_test[col_to_predict] == 0].iterrows():
+        row = test_data.iloc[idx]
+        x = test_data.iloc[idx, predicted_indexes]
+        pred = predict(x, W)
+        test_data.iloc[idx, start : end + 1] = pred
 
     train_data = np.array(train_data)
     test_data = np.array(test_data)
-    # print(train_data[:, start : end + 1].shape)
+
     return train_data[:, start : end + 1], test_data[:, start : end + 1]
 
 
