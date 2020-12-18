@@ -40,16 +40,6 @@ class Data:
 			self.trainData = self.oneHotEncoding(self.trainData)
 			self.testData = self.oneHotEncoding(self.testData)
 
-			
-
-			# print("trainData shape = ", self.trainData.shape)
-			# print("Test trainData shape = ", self.testData.shape)
-			# print("trainData with Nan shape = ", self.dataWithNan.shape)
-
-			# self.trainData = self.trainData.head(1000)
-			# self.testData = self.testData.head(1000)
-			# print(self.trainData.shape)
-			# print(self.testData.shape)
 
 			# 1 column in missing in test trainData - add feature manually
 			for column in self.trainData.columns:
@@ -64,9 +54,9 @@ class Data:
 			# print("Test data = ", self.testData.head())
 
 			print("\nRandomly removing features from training data")
-			X_prime_train, isFeatureReal_train = self.prepareMissingData(self.trainData)
+			X_prime_train, isFeatureReal_train = self.prepareMissingData(self.trainData, nMissingMax = 2)
 			print("\nRandomly removing features from testing data")
-			X_prime_test, isFeatureReal_test = self.prepareMissingData(self.testData)
+			X_prime_test, isFeatureReal_test = self.prepareMissingData(self.testData, nMissingMax = 2)
 
 			# Convetr X_train and X_test to numpy
 			X_train = self.trainData.to_numpy()
@@ -85,14 +75,6 @@ class Data:
 			np.save(self.path + 'Test/feature_information.npy', isFeatureReal_test)
 
 		else:
-			# # DEBUG
-			# print("Reading data")
-			# self.trainData = pd.read_csv(self.path + 'adult.data', header = None)
-			# self.trainData.columns = self.columnList
-			# # print(self.trainData.loc[self.trainData["age"] == 0])
-			# print(self.trainData.iloc[194])
-			# exit()
-
 
 			print("Reading training data from the folder {}".format(self.path + 'Train/'))
 			print("Reading testing data from the folder {}".format(self.path + 'Test/'))

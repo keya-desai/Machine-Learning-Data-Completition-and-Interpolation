@@ -14,24 +14,9 @@ class BaselineModel:
 
         self.categoricalFeatures = categoricalFeatures
 
-        # temp = pd.DataFrame(self.X_prime_train)
-        # print("In baseline before filtering")         
-        # print(temp.loc[temp[0] == 0].head(25))
-
-        # temp = pd.DataFrame(self.isFeatureReal_train)
-        # print("In baseline isfeaturereal 0 before filtering")         
-        # print(temp.loc[temp[0] == 0].head(25))
-
-
         # Missing value as Nan
         self.X_prime_train = self.X_prime_train.where(self.isFeatureReal_train > 0)
         self.X_prime_test = self.X_prime_test.where(self.isFeatureReal_test > 0)
-
-        # temp = pd.DataFrame(self.X_prime_train)
-        # print("In baseline")         
-        # print(temp.loc[temp[0] == 0].head(25))
-
-
         self.numFeatures = len(self.isFeatureReal_train.columns)
 
 
@@ -53,9 +38,9 @@ class BaselineModel:
                 df = self.X_prime_train.iloc[:,start:end+1]
                 # Determine mode class
                 colSum = np.array([df[c].sum() for c in df.columns])
-#                 print("colSum",colSum)
+
                 maxClass = np.argmax(colSum)
-#                 print("maxClass:", maxClass)
+
                 for i in range(start, end+1):
                     self.colToMeanMode[i] = 0
                 self.colToMeanMode[maxClass+start] = 1
@@ -66,14 +51,11 @@ class BaselineModel:
                 self.colToMeanMode[col] = mean
             else:
                 continue
-        # print(self.colToMeanMode)
+
     
     def fillMissingValues(self, colIdxList = None):
         train_pred = self.X_prime_train
         test_pred = self.X_prime_test
-
-        # print("x train 0 in fill missing value baseline")
-        # print(train_pred.loc[train_pred[0] == 0])
 
         if colIdxList:
             for col in colIdxList:

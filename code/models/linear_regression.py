@@ -35,12 +35,12 @@ def predict(w, isFeatureReal, X_prime):
 
 def linear_regression_model(X_train, X_prime_train, X_prime_test, isFeatureReal_train, isFeatureReal_test, ridge = False):
 
-	if ridge:
-		w = ridge_regression(X_prime_train, X_train, l = 0.01)
-	else:
-		w = least_square_regression(X_prime_train, X_train)
+    if ridge:
+    	w = ridge_regression(X_prime_train, X_prime_train, l = 0.01)
+    else:
+    	w = least_square_regression(X_prime_train, X_train)
 
-	X_pred_train = predict(w, isFeatureReal_train, X_prime_train)
-	X_pred_test = predict(w, isFeatureReal_test, X_prime_test)
+    X_pred_train = predict(w, isFeatureReal_train, X_prime_train)
+    X_pred_test = predict(w, isFeatureReal_test, X_prime_test)
 
-	return X_pred_train, X_pred_test
+    return X_pred_train, X_pred_test
